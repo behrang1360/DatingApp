@@ -33,6 +33,8 @@ export class AuthService implements OnInit {
             localStorage.setItem("token", user.token);
             this.model = user;
           }
+        }, (catchError) => { 
+            
         })
       );
   }

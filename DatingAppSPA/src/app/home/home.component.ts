@@ -1,6 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { stat } from "fs";
+
 
 @Component({
   selector: "app-home",
