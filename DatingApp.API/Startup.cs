@@ -20,6 +20,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
 using AutoMapper;
+using System.Text;
 
 namespace DatingApp.API
 {
@@ -35,22 +36,29 @@ namespace DatingApp.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddAutoMapper(typeof(DatingAppDbContext).Assembly);
-            services.AddDbContext<DatingAppDbContext>(
+            services.AddAutoMapper(typeof(DataContext).Assembly);
+            services.AddDbContext<DataContext>(
                 options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+                 .AddJsonOptions(opt =>
+                 {
+                     opt.SerializerSettings.ReferenceLoopHandling =
+                         Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                 });
             services.AddCors();
-           
+            services.AddAutoMapper(typeof(DataContext).Assembly);
+            services.AddTransient<Seed>();
             services.AddScoped<IAuthRepository, AuthRepository>();
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(
-                options =>
+            services.AddScoped<IDatingRepository, DatingRepository>();
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(
-                          System.Text.Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII
+                            .GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
                         ValidateIssuer = false,
                         ValidateAudience = false
                     };
@@ -64,16 +72,15 @@ namespace DatingApp.API
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                IdentityModelEventSource.ShowPII = true;
             }
             else
             {
-
-                app.UseExceptionHandler(buidler =>
+                app.UseExceptionHandler(builder =>
                 {
-                    buidler.Run(async context =>
+                    builder.Run(async context =>
                     {
                         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+
                         var error = context.Features.Get<IExceptionHandlerFeature>();
                         if (error != null)
                         {
@@ -82,13 +89,12 @@ namespace DatingApp.API
                         }
                     });
                 });
-
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                //app.UseHsts();
+                // app.UseHsts();
             }
 
-            //app.UseHttpsRedirection();
-            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            // app.UseHttpsRedirection();
+            // seeder.SeedUsers();
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
             app.UseAuthentication();
             app.UseMvc();
         }

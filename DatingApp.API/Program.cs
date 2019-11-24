@@ -22,3 +22,24 @@ namespace DatingApp.API
                 .UseStartup<Startup>();
     }
 }
+
+
+// var host = 
+// using (var scope = host.Services.CreateScope())
+// {
+//     var services = scope.ServiceProvider;
+
+//     try
+//     {
+//         var context = services.GetRequiredService<DataContext>();
+//         context.Database.Migrate();
+//         Seed seed = new Seed(context);
+//         seed.SeedUsers();
+//     }
+//     catch (
+//         Exception ex
+//     )
+//     {
+
+
+//     }

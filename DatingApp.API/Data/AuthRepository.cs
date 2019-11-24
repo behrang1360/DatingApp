@@ -5,33 +5,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DatingApp.API.Data
 {
-
     public class AuthRepository : IAuthRepository
     {
-        private readonly DatingAppDbContext _dataContext;
-
-        public AuthRepository(DatingAppDbContext dataContext)
+        private readonly DataContext _context;
+        public AuthRepository(DataContext context)
         {
-            _dataContext = dataContext;
+            _context = context;
         }
-
-        public DatingAppDbContext DataContext => _dataContext;
-
-        public async Task<bool> IsUserExist(string username)
-        {
-            return await _dataContext.Users.AnyAsync(u => u.Username == username) == true;
-        }
-
         public async Task<User> Login(string username, string password)
         {
-            var user = await _dataContext.Users.FirstOrDefaultAsync(c => c.Username == username);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == username);
+
             if (user == null)
                 return null;
-           if (!VerifyPasswordHash(password, user.Password, user.PasswordSalt))
+            
+            if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
                 return null;
 
             return user;
-
         }
 
         private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
@@ -47,28 +38,36 @@ namespace DatingApp.API.Data
             }
         }
 
-        public async Task<User> Register(User user, string username, string password)
+        public async Task<User> Register(User user, string password)
         {
-            byte[] passwordHash, passwordSaltHash;
-            CreatePasswordHash(password, out passwordHash, out passwordSaltHash);
-            user.Username = username;
-            user.Password = passwordHash;
-            user.PasswordSalt = passwordSaltHash;
+            byte[] passwordHash, passwordSalt;
+            CreatePasswordHash(password, out passwordHash, out passwordSalt);
 
-            await _dataContext.Users.AddAsync(user);
-            await _dataContext.SaveChangesAsync();
+            user.PasswordHash = passwordHash;
+            user.PasswordSalt = passwordSalt;
+
+            await _context.Users.AddAsync(user);
+
+            await _context.SaveChangesAsync();
+
             return user;
         }
 
- private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             using (var hmac = new System.Security.Cryptography.HMACSHA512())
             {
                 passwordSalt = hmac.Key;
                 passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-            }
-            
+            } 
+        }
+
+        public async Task<bool> UserExists(string username)
+        {
+            if (await _context.Users.AnyAsync(x => x.Username == username))
+                return true;
+
+            return false;
         }
     }
-
 }

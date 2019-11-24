@@ -14,43 +14,36 @@ namespace DatingApp.API.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
-        public DatingAppDbContext _DbContext { get; }
-
-        public ValuesController(DatingAppDbContext dbContext)
+        private readonly DataContext _context;
+        public ValuesController(DataContext context)
         {
-            _DbContext = dbContext;
+            _context = context;
         }
 
         // GET api/values
-        [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> Get()
+        [HttpGet]
+        public async Task<IActionResult> GetValues()
         {
-            var values = await _DbContext.Values.ToListAsync();
+            var values = await _context.Values.ToListAsync();
+
             return Ok(values);
         }
 
         // GET api/values/5
-        [HttpGet("{id:int}")]
         [AllowAnonymous]
-        public async Task<IActionResult> Get(int id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetValue(int id)
         {
-            var value = await _DbContext.Values.FirstOrDefaultAsync(c => c.Id == id);
+            var value = await _context.Values.FirstOrDefaultAsync(x => x.Id == id);
+
             return Ok(value);
         }
 
         // POST api/values
         [HttpPost]
-        [AllowAnonymous]
-        public void Post(string value)
+        public void Post([FromBody] string value)
         {
-        }
-
-        [HttpPost("test")]
-        [AllowAnonymous]
-        public IActionResult test([FromBody]string sss)
-        {
-            return Content(sss);
         }
 
         // PUT api/values/5
