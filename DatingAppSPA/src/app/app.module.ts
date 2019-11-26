@@ -5,9 +5,10 @@ import {
 } from "@angular/platform-browser";
 import { NgModule } from "@angular/core";
 import { HttpClientModule } from "@angular/common/http";
-import { FormsModule } from "@angular/forms";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { routesApp } from "./routes";
 import { NgxGalleryModule } from "ngx-gallery";
+import { BsDatepickerModule } from 'ngx-bootstrap';
 import { AppComponent } from "./app.component";
 import { NavComponent } from "./nav/nav.component";
 import { AuthService } from "./_services/auth.service";
@@ -58,11 +59,14 @@ export class CustomHammerConfig extends HammerGestureConfig {
     BrowserModule,
     HttpClientModule,
     FormsModule,
+    ReactiveFormsModule,
     TabsModule.forRoot(),
     BrowserAnimationsModule,
+    BsDatepickerModule.forRoot(),
     BsDropdownModule.forRoot(),
     RouterModule.forRoot(routesApp),
     NgxGalleryModule,
+  
     JwtModule.forRoot({
       config: {
         tokenGetter: getToken,
